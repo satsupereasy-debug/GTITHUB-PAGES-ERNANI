@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Seleção de Imagem</title>
+<style>
+  :root {
+    --bg:      #f4f2ee;
+    --surface: #ffffff;
+    --border:  #d8d4cd;
+    --ink:     #1a1916;
+    --ink2:    #4a4742;
+    --ink3:    #8a8680;
+    --accent:  #1a3a2a;
+    --aclt:    #d6ead0;
+    --red:     #b52020;
+    --red-lt:  #fde8e8;
+    --radius:  8px;
+    --font:    'Segoe UI', system-ui, sans-serif;
+    --mono:    'Consolas', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── CARD PRINCIPAL ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    padding: 2rem;
+    width: 100%;
+    max-width: 720px;
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.3rem;
+    letter-spacing: -0.01em;
+  }
+  .card-sub {
+    font-size: 0.8rem;
+    color: var(--ink3);
+    margin-bottom: 1.5rem;
+  }
+
+  /* ── GRID DE OPÇÕES ── */
+  .opcoes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  /* Cada opção é um label que envolve tudo */
+  .opcao {
+    position: relative;
+    cursor: pointer;
+  }
+
+  /* Esconde o radio nativo */
+  .opcao input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0; height: 0;
+  }
+
+  .opcao-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.75rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+  .opcao-inner:hover {
+    border-color: var(--accent);
+    background: #f0f5f0;
+  }
+
+  /* Estado selecionado */
+  .opcao input[type="radio"]:checked + .opcao-inner {
+    border-color: var(--accent);
+    background: var(--aclt);
+    box-shadow: 0 0 0 3px rgba(26,58,42,0.15);
+  }
+
+  /* Checkmark no canto superior direito */
+  .opcao-inner::after {
+    content: '';
+    position: absolute;
+    top: 0.5rem; right: 0.5rem;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    transition: all 0.15s;
+  }
+  .opcao input[type="radio"]:checked + .opcao-inner::after {
+    background: var(--accent);
+    border-color: var(--accent);
+    content: '✓';
+    color: #fff;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  /* Imagem */
+  .opcao-img {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  /* Label da opção */
+  .opcao-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink2);
+    text-align: center;
+  }
+  .opcao input[type="radio"]:checked + .opcao-inner .opcao-label {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* ID da imagem */
+  .opcao-id {
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    color: var(--ink3);
+    text-align: center;
+  }
+
+  /* ── BOTÃO ENVIAR ── */
+  .footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-enviar {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: var(--font);
+    padding: 0.6rem 1.75rem;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .btn-enviar:hover   { background: #0f2518; }
+  .btn-enviar:active  { transform: scale(0.98); }
+  .btn-enviar:disabled {
+    background: var(--border);
+    color: var(--ink3);
+    cursor: not-allowed;
+  }
+  .btn-enviar.loading { opacity: 0.7; cursor: wait; }
+
+  /* ── STATUS ── */
+  #status {
+    font-size: 0.8rem;
+    font-family: var(--mono);
+    padding: 0.4rem 0.75rem;
+    border-radius: 4px;
+    display: none;
+  }
+  #status.ok    { background: var(--aclt);   color: var(--accent); display: block; }
+  #status.erro  { background: var(--red-lt); color: var(--red);    display: block; }
+  #status.info  { background: #e8f0fe;       color: #1a4085;       display: block; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 1.5rem; right: 1.5rem;
+    background: var(--ink);
+    color: #fff;
+    font-size: 0.85rem;
+    padding: 0.65rem 1.1rem;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    max-width: 280px;
+  }
+  #toast.show { opacity: 1; transform: none; }
+  #toast.ok   { background: var(--accent); }
+  #toast.erro { background: var(--red); }
+
+  /* ── RESPONSIVO ── */
+  @media (max-width: 500px) {
+    .opcoes-grid { grid-template-columns: 1fr; }
+    .card { padding: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="card-title">Selecione uma imagem</div>
+  <div class="card-sub">Escolha uma das opções abaixo e clique em Enviar</div>
+
+  <div class="opcoes-grid">
+
+    <!-- OPÇÃO 1 -->
+    <label class="opcao">
+      <input type="radio" name="imagem" value="imagem_1" id="opt1"/>
+      <div class="opcao-inner">
+        <!--
+          Substitua o src pelo caminho da imagem no seu repositório GitHub.
+          Ex: src="images/imagem1.jpg"
+          As imagens devem estar na pasta /images do repositório.
+        -->
+        <img class="opcao-img" src="images/imagem1.jpg"
+             alt="Imagem 1"
+             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Imagem+1'"/>
+        <span class="opcao-label">Opção 1</span>
+        <span class="opcao-id">imagem_1</span>
+      </div>
+    </label>
+
+    <!-- OPÇÃO 2 -->
+    <label class="opcao">
+      <input type="radio" name="imagem" value="imagem_2" id="opt2"/>
+      <div class="opcao-inner">
+        <img class="opcao-img" src="images/imagem2.jpg"
+             alt="Imagem 2"
+             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Imagem+2'"/>
+        <span class="opcao-label">Opção 2</span>
+        <span class="opcao-id">imagem_2</span>
+      </div>
+    </label>
+
+    <!-- OPÇÃO 3 -->
+    <label class="opcao">
+      <input type="radio" name="imagem" value="imagem_3" id="opt3"/>
+      <div class="opcao-inner">
+        <img class="opcao-img" src="images/imagem3.jpg"
+             alt="Imagem 3"
+             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Imagem+3'"/>
+        <span class="opcao-label">Opção 3</span>
+        <span class="opcao-id">imagem_3</span>
+      </div>
+    </label>
+
+  </div>
+
+  <div class="footer-actions">
+    <button class="btn-enviar" id="btn-enviar" onclick="enviar()">
+      ↗ Enviar seleção
+    </button>
+    <span id="status"></span>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  /*
+   * ── CONFIG ──────────────────────────────────────────
+   * Substitua pela URL do seu túnel NGrok.
+   * Ex: 'https://abcd1234.ngrok-free.app/webhook'
+   */
+  const WEBHOOK_URL = 'https://quaking-masculine-envelope.ngrok-free.dev';
+
+  /* ── ENVIAR ─────────────────────────────────────────── */
+  async function enviar() {
+    const selecionado = document.querySelector('input[name="imagem"]:checked');
+
+    if (!selecionado) {
+      mostrarStatus('Selecione uma imagem antes de enviar.', 'info');
+      return;
+    }
+
+    const btn = document.getElementById('btn-enviar');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.textContent = '⏳ Enviando…';
+    mostrarStatus('', '');
+
+    const payload = {
+      imagem_id:  selecionado.value,
+      timestamp:  new Date().toISOString(),
+    };
+
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // NGrok exige este header para evitar o aviso de browser
+          'ngrok-skip-browser-warning': 'true',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        mostrarStatus('✓ Enviado com sucesso! Imagem: ' + selecionado.value, 'ok');
+        toast('Enviado! ' + selecionado.value, 'ok');
+      } else {
+        throw new Error('HTTP ' + res.status);
+      }
+
+    } catch(e) {
+      mostrarStatus('✕ Erro ao enviar: ' + e.message, 'erro');
+      toast('Erro: ' + e.message, 'erro');
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+      btn.textContent = '↗ Enviar seleção';
+    }
+  }
+
+  /* ── STATUS ─────────────────────────────────────────── */
+  function mostrarStatus(msg, tipo) {
+    const el = document.getElementById('status');
+    el.textContent  = msg;
+    el.className    = tipo;
+  }
+
+  /* ── TOAST ──────────────────────────────────────────── */
+  function toast(msg, tipo = '') {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className   = 'show ' + tipo;
+    setTimeout(() => { el.className = tipo; }, 3000);
+  }
+
+  /* ── Enter dispara envio ────────────────────────────── */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') enviar();
+  });
+</script>
+</body>
+</html>
