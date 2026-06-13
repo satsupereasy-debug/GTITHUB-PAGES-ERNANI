@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Resumo da Seleção</title>
+<link rel="stylesheet" href="shared.css"/>
+<style>
+  .resumo-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    margin-bottom: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .resumo-header {
+    background: var(--accent); color: #fff;
+    padding: 0.65rem 1rem; font-size: 0.78rem;
+    font-family: var(--mono); letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  thead th {
+    font-family: var(--mono); font-size: 0.65rem;
+    letter-spacing: 0.09em; text-transform: uppercase;
+    color: var(--ink3); padding: 0.55rem 1rem;
+    text-align: left; border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg); }
+  td { padding: 0.6rem 1rem; color: var(--ink2); vertical-align: middle; }
+  td.primary { color: var(--ink); font-weight: 500; }
+  td.mono    { font-family: var(--mono); font-size: 0.8rem; color: var(--ink3); }
+  .btn-remover {
+    background: none; border: none; color: var(--ink3);
+    cursor: pointer; font-size: 0.9rem; padding: 0.2rem 0.4rem;
+    border-radius: 3px; transition: color 0.12s;
+  }
+  .btn-remover:hover { color: var(--red); }
+  .qty-edit {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; padding: 0.2rem 0.4rem;
+    font-size: 0.82rem; font-family: var(--mono);
+    font-weight: 700; color: var(--accent); width: 56px;
+  }
+  .vazio { padding: 3rem 1rem; text-align: center; color: var(--ink3); }
+  .vazio strong { display: block; font-size: 1rem; color: var(--ink2); margin-bottom: 0.5rem; }
+  .total-row td {
+    font-weight: 700; color: var(--ink);
+    border-top: 2px solid var(--border); background: var(--bg);
+  }
+
+  /* ── CARD DE DADOS ── */
+  .dados-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    margin-bottom: 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .dados-header {
+    background: var(--ink2); color: #fff;
+    padding: 0.65rem 1rem; font-size: 0.78rem;
+    font-family: var(--mono); letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .dados-body {
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1rem;
+  }
+  .field-group { display: flex; flex-direction: column; gap: 0.3rem; }
+  .field-label {
+    font-size: 0.65rem; font-family: var(--mono);
+    font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink3);
+  }
+  .field-label .req { color: var(--red); }
+  .field-input {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 0.45rem 0.75rem;
+    font-size: 0.88rem; font-family: var(--font);
+    color: var(--ink); outline: none; width: 100%;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .field-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(26,58,42,0.1);
+  }
+  .field-input.invalid { border-color: var(--red); }
+  .field-hint { font-size: 0.7rem; color: var(--ink3); }
+
+  /* ── AUTOCOMPLETE DE CLIENTE ── */
+  .autocomplete-wrap { position: relative; }
+  .autocomplete-wrap .field-input { padding-right: 2rem; }
+  .autocomplete-loading {
+    position: absolute; right: 0.6rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem; color: var(--ink3);
+    pointer-events: none;
+  }
+  .dropdown-clientes {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    border-radius: 0 0 var(--radius) var(--radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 200;
+    max-height: 220px;
+    overflow-y: auto;
+    display: none;
+  }
+  .dropdown-clientes.open { display: block; }
+  .dropdown-item {
+    padding: 0.55rem 0.85rem;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .dropdown-item:last-child { border-bottom: none; }
+  .dropdown-item:hover, .dropdown-item.focused {
+    background: var(--aclt);
+  }
+  .dropdown-item .cli-codigo {
+    font-family: var(--mono); font-size: 0.72rem;
+    color: var(--ink3); flex-shrink: 0;
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 3px; padding: 1px 6px;
+  }
+  .dropdown-item .cli-nome {
+    font-size: 0.85rem; color: var(--ink); font-weight: 500;
+    flex: 1;
+  }
+  .dropdown-item .cli-wpp {
+    font-family: var(--mono); font-size: 0.7rem; color: var(--ink3);
+  }
+  .cli-selecionado {
+    margin-top: 0.4rem;
+    font-size: 0.75rem; font-family: var(--mono);
+    color: var(--accent);
+    display: none;
+  }
+  .cli-selecionado.show { display: block; }
+  .dropdown-vazio {
+    padding: 0.85rem; text-align: center;
+    font-size: 0.82rem; color: var(--ink3);
+  }
+
+  /* ── STATUS ── */
+  #status {
+    font-size: 0.82rem; font-family: var(--mono);
+    padding: 0.5rem 0.85rem; border-radius: var(--radius);
+    display: none; margin-top: 0.5rem;
+  }
+  #status.ok   { background: var(--aclt);   color: var(--accent); display: block; }
+  #status.erro { background: var(--red-lt); color: var(--red);    display: block; }
+  #status.info { background: #e8f0fe;       color: #1a4085;       display: block; }
+
+  @media (max-width: 480px) {
+    .dados-body { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-title">Resumo da seleção</span>
+  <a class="topbar-badge" href="pagina1.html">← Voltar às páginas</a>
+</div>
+
+<div class="page-nav">
+  <a class="page-nav-item" href="pagina1.html">① Página 1</a>
+  <span class="page-nav-sep">›</span>
+  <a class="page-nav-item" href="pagina2.html">② Página 2</a>
+  <span class="page-nav-sep">›</span>
+  <a class="page-nav-item" href="pagina3.html">③ Página 3</a>
+  <span class="page-nav-sep">›</span>
+  <a class="page-nav-item active" href="resumo.html">✓ Resumo</a>
+</div>
+
+<div class="content">
+  <div class="page-title">Resumo do pedido</div>
+  <div class="page-sub">Confira os itens, selecione o cliente e envie</div>
+
+  <!-- ITENS SELECIONADOS -->
+  <div class="resumo-card">
+    <div class="resumo-header">
+      <span>Itens selecionados</span>
+      <span id="resumo-count" style="font-weight:700">0 item(s)</span>
+    </div>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>Item</th><th>Página</th><th>Quantidade</th><th></th></tr>
+      </thead>
+      <tbody id="tbody-resumo">
+        <tr><td colspan="5" class="vazio">
+          <strong>Nenhum item selecionado</strong>
+          Volte às páginas e selecione os itens.
+        </td></tr>
+      </tbody>
+      <tfoot>
+        <tr class="total-row" id="total-row" style="display:none">
+          <td colspan="3">Total</td>
+          <td id="total-qty" style="font-family:var(--mono);font-weight:700;color:var(--accent)">0</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- DADOS DO PEDIDO -->
+  <div class="dados-card">
+    <div class="dados-header">Dados do pedido</div>
+    <div class="dados-body">
+
+      <!-- Comanda -->
+      <div class="field-group">
+        <label class="field-label">Nº Comanda <span class="req">*</span></label>
+        <input class="field-input" id="comanda" type="text"
+               placeholder="Ex: 42" maxlength="10"
+               onkeydown="if(event.key==='Enter') document.getElementById('busca-cliente').focus()"/>
+        <span class="field-hint">Número da comanda ou mesa</span>
+      </div>
+
+      <!-- Autocomplete de cliente -->
+      <div class="field-group">
+        <label class="field-label">Cliente <span class="req">*</span></label>
+        <div class="autocomplete-wrap">
+          <input class="field-input" id="busca-cliente" type="text"
+                 placeholder="Digite código ou nome do cliente…"
+                 autocomplete="off"
+                 oninput="onDigitarCliente(this.value)"
+                 onkeydown="onKeyCliente(event)"
+                 onfocus="if(this.value) abrirDropdown()"/>
+          <span class="autocomplete-loading" id="loading-cli" style="display:none">⏳</span>
+          <div class="dropdown-clientes" id="dropdown-clientes"></div>
+        </div>
+        <div class="cli-selecionado" id="cli-selecionado"></div>
+        <span class="field-hint">Busca por código ou nome</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AÇÕES -->
+  <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
+    <button class="btn btn-primary" id="btn-enviar" onclick="enviar()">
+      ↗ Confirmar pedido
+    </button>
+    <button class="btn btn-ghost" onclick="limparTudo()">🗑 Limpar tudo</button>
+  </div>
+  <div id="status"></div>
+
+  <!-- JSON PREVIEW -->
+  <details style="margin-top:1.5rem">
+    <summary style="font-size:0.75rem;font-family:var(--mono);color:var(--ink3);cursor:pointer">
+      Ver JSON que será enviado
+    </summary>
+    <pre id="json-preview"
+         style="margin-top:0.5rem;background:var(--surface);
+                border:1px solid var(--border);border-radius:var(--radius);
+                padding:1rem;font-size:0.72rem;font-family:var(--mono);
+                color:var(--ink2);overflow-x:auto;white-space:pre-wrap"></pre>
+  </details>
+</div>
+
+<div id="toast"></div>
+<script src="shared.js"></script>
+<script>
+  /* ── CONFIG ── */
+  const WEBHOOK_URL  = 'https://SEU-TUNEL.ngrok-free.app/pedido';
+  const API_CLIENTES = 'https://SEU-TUNEL.ngrok-free.app/clientes/';
+
+  /* ── ESTADO DO CLIENTE SELECIONADO ── */
+  let clienteSelecionado = null;
+  let focusIndex         = -1;
+  let timerBusca         = null;
+  let ultimaBusca        = '';
+
+  /* ── AUTOCOMPLETE ── */
+  function onDigitarCliente(termo) {
+    // Limpa seleção ao editar
+    clienteSelecionado = null;
+    document.getElementById('cli-selecionado').classList.remove('show');
+    document.getElementById('cli-selecionado').textContent = '';
+    atualizarPreview();
+
+    if (!termo.trim()) { fecharDropdown(); return; }
+
+    clearTimeout(timerBusca);
+    timerBusca = setTimeout(() => buscarClientes(termo.trim()), 350);
+  }
+
+  async function buscarClientes(termo) {
+    if (termo === ultimaBusca) return;
+    ultimaBusca = termo;
+
+    document.getElementById('loading-cli').style.display = '';
+    try {
+      const url = `${API_CLIENTES}?busca=${encodeURIComponent(termo)}&por_pagina=20`;
+      const res = await fetch(url, {
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const lista = data.dados || data;
+      renderDropdown(lista);
+    } catch(e) {
+      renderDropdownErro(e.message);
+    } finally {
+      document.getElementById('loading-cli').style.display = 'none';
+    }
+  }
+
+  function renderDropdown(lista) {
+    const dd = document.getElementById('dropdown-clientes');
+    focusIndex = -1;
+
+    if (!lista.length) {
+      dd.innerHTML = '<div class="dropdown-vazio">Nenhum cliente encontrado</div>';
+      dd.classList.add('open');
+      return;
+    }
+
+    dd.innerHTML = lista.map((c, i) => {
+      const codigo = c.codigo || String(c.id).padStart(4,'0');
+      const nome   = c.nome || c.razao_social || '—';
+      const wpp    = c.celular || c.telefone || '';
+      return `
+        <div class="dropdown-item" data-index="${i}"
+             data-id="${c.id}"
+             data-codigo="${esc(codigo)}"
+             data-nome="${esc(nome)}"
+             data-wpp="${esc(wpp)}"
+             onclick="selecionarCliente(this)"
+             onmouseover="setFocus(${i})">
+          <span class="cli-codigo">${esc(codigo)}</span>
+          <span class="cli-nome">${esc(nome)}</span>
+          ${wpp ? `<span class="cli-wpp">${esc(wpp)}</span>` : ''}
+        </div>`;
+    }).join('');
+
+    dd.classList.add('open');
+  }
+
+  function renderDropdownErro(msg) {
+    const dd = document.getElementById('dropdown-clientes');
+    dd.innerHTML = `<div class="dropdown-vazio" style="color:var(--red)">Erro: ${msg}</div>`;
+    dd.classList.add('open');
+  }
+
+  function selecionarCliente(el) {
+    clienteSelecionado = {
+      id:     el.dataset.id,
+      codigo: el.dataset.codigo,
+      nome:   el.dataset.nome,
+      wpp:    el.dataset.wpp,
+    };
+    document.getElementById('busca-cliente').value =
+      `${clienteSelecionado.codigo} — ${clienteSelecionado.nome}`;
+    document.getElementById('busca-cliente').classList.remove('invalid');
+
+    const info = document.getElementById('cli-selecionado');
+    info.textContent = clienteSelecionado.wpp
+      ? `✓ WhatsApp: ${clienteSelecionado.wpp}`
+      : '⚠ Sem WhatsApp cadastrado';
+    info.classList.add('show');
+
+    fecharDropdown();
+    atualizarPreview();
+  }
+
+  function fecharDropdown() {
+    document.getElementById('dropdown-clientes').classList.remove('open');
+    focusIndex = -1;
+  }
+  function abrirDropdown() {
+    const dd = document.getElementById('dropdown-clientes');
+    if (dd.innerHTML) dd.classList.add('open');
+  }
+
+  /* Navegação teclado no dropdown */
+  function setFocus(idx) {
+    focusIndex = idx;
+    document.querySelectorAll('.dropdown-item').forEach((el, i) =>
+      el.classList.toggle('focused', i === idx));
+  }
+  function onKeyCliente(e) {
+    const items = document.querySelectorAll('.dropdown-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setFocus(Math.min(focusIndex + 1, items.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setFocus(Math.max(focusIndex - 1, 0));
+    } else if (e.key === 'Enter' && focusIndex >= 0) {
+      e.preventDefault();
+      selecionarCliente(items[focusIndex]);
+    } else if (e.key === 'Escape') {
+      fecharDropdown();
+    }
+  }
+
+  /* Fecha dropdown ao clicar fora */
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.autocomplete-wrap')) fecharDropdown();
+  });
+
+  /* ── RENDER RESUMO ── */
+  function renderResumo() {
+    const selecao  = lerSelecao();
+    const itens    = Object.values(selecao).sort((a,b) => a.pagina - b.pagina);
+    const tbody    = document.getElementById('tbody-resumo');
+    const count    = document.getElementById('resumo-count');
+    const totalRow = document.getElementById('total-row');
+    const totalQty = document.getElementById('total-qty');
+
+    count.textContent = itens.length + ' item(s)';
+
+    if (!itens.length) {
+      tbody.innerHTML = `<tr><td colspan="5" class="vazio">
+        <strong>Nenhum item selecionado</strong>
+        Volte às páginas e selecione os itens.
+      </td></tr>`;
+      totalRow.style.display = 'none';
+      atualizarPreview();
+      return;
+    }
+
+    totalQty.textContent = itens.reduce((s,i) => s + parseInt(i.qty), 0);
+    totalRow.style.display = '';
+
+    tbody.innerHTML = itens.map(item => `
+      <tr>
+        <td class="mono">${item.id}</td>
+        <td class="primary">${item.label}</td>
+        <td class="mono">Pág. ${item.pagina}</td>
+        <td>
+          <select class="qty-edit"
+                  onchange="editarQty('${item.id}','${item.label}',${item.pagina},this.value)">
+            ${[1,2,3,4,5,6,7,8,9,10].map(n =>
+              `<option ${n == item.qty ? 'selected':''}>${n}</option>`
+            ).join('')}
+          </select>
+        </td>
+        <td>
+          <button class="btn-remover" onclick="removerItem('${item.id}')">✕</button>
+        </td>
+      </tr>`).join('');
+
+    atualizarPreview();
+  }
+
+  function editarQty(id, label, pagina, qty) {
+    atualizarQty(id, label, pagina, qty);
+    renderResumo();
+  }
+  function removerItem(id) {
+    const s = lerSelecao(); delete s[id]; salvarSelecao(s);
+    renderResumo(); atualizarBadge(); toast('Item removido');
+  }
+
+  /* ── PAYLOAD ── */
+  function montarPayload() {
+    const itens = Object.values(lerSelecao());
+    return {
+      comanda:   document.getElementById('comanda').value.trim(),
+      cliente_id:    clienteSelecionado?.id     || null,
+      cliente_codigo: clienteSelecionado?.codigo || null,
+      cliente_nome:  clienteSelecionado?.nome   || null,
+      whatsapp:  clienteSelecionado?.wpp?.replace(/\D/g,'') || null,
+      itens:     itens.map(i => ({
+        id: i.id, label: i.label, quantidade: parseInt(i.qty),
+      })),
+      total_itens:      itens.length,
+      total_quantidade: itens.reduce((s,i) => s + parseInt(i.qty), 0),
+      timestamp:        new Date().toISOString(),
+    };
+  }
+
+  function atualizarPreview() {
+    document.getElementById('json-preview').textContent =
+      JSON.stringify(montarPayload(), null, 2);
+  }
+
+  /* ── ENVIAR ── */
+  async function enviar() {
+    const itens   = Object.values(lerSelecao());
+    const comanda = document.getElementById('comanda').value.trim();
+
+    if (!itens.length) {
+      mostrarStatus('Selecione ao menos um item.', 'info'); return;
+    }
+    if (!comanda) {
+      mostrarStatus('Informe o número da comanda.', 'info');
+      document.getElementById('comanda').classList.add('invalid');
+      document.getElementById('comanda').focus(); return;
+    }
+    if (!clienteSelecionado) {
+      mostrarStatus('Selecione um cliente.', 'info');
+      document.getElementById('busca-cliente').classList.add('invalid');
+      document.getElementById('busca-cliente').focus(); return;
+    }
+
+    document.getElementById('comanda').classList.remove('invalid');
+    document.getElementById('busca-cliente').classList.remove('invalid');
+
+    const btn = document.getElementById('btn-enviar');
+    btn.disabled = true; btn.textContent = '⏳ Enviando…';
+    mostrarStatus('', '');
+
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method:  'POST',
+        headers: {
+          'Content-Type':               'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
+        body: JSON.stringify(montarPayload()),
+      });
+      if (res.ok) {
+        mostrarStatus(
+          `✓ Pedido enviado! Comanda #${comanda} · Cliente: ${clienteSelecionado.nome}`,
+          'ok'
+        );
+        toast('✓ Pedido confirmado!');
+      } else {
+        throw new Error('HTTP ' + res.status);
+      }
+    } catch(e) {
+      mostrarStatus('✕ Erro: ' + e.message, 'erro');
+    } finally {
+      btn.disabled = false; btn.textContent = '↗ Confirmar pedido';
+    }
+  }
+
+  function mostrarStatus(msg, tipo) {
+    const el = document.getElementById('status');
+    el.textContent = msg; el.className = tipo;
+  }
+
+  function esc(s) {
+    return String(s||'')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  renderResumo();
+</script>
+</body>
+</html>
