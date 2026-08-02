@@ -5,23 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Seleção — Página 3</title>
 <link rel="stylesheet" href="shared.css"/>
-<style>
-  .itens-grid { grid-template-columns: repeat(3, 1fr); }
-  @media (max-width: 600px) { .itens-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 380px) { .itens-grid { grid-template-columns: 1fr; } }
-</style>
 </head>
 <body>
 
 <div class="topbar">
   <span class="topbar-title">Seleção de itens</span>
   <a class="topbar-badge" href="resumo.html">
-    🛒 Ver seleção <span class="badge-count" id="badge-count">0</span>
+    🛒 Ver seleção
+    <span class="badge-count" id="badge-count">0</span>
   </a>
 </div>
 
 <div class="page-nav">
-  <a class="page-nav-item" href="index.html">① Página 1</a>
+  <a class="page-nav-item" href="pagina1.html">① Página 1</a>
   <span class="page-nav-sep">›</span>
   <a class="page-nav-item" href="pagina2.html">② Página 2</a>
   <span class="page-nav-sep">›</span>
@@ -31,10 +27,87 @@
 </div>
 
 <div class="content">
-  <div class="page-title">Página 3 — Itens 13 a 18</div>
+  <div class="page-title">Página 3 — Itens 7 a 9</div>
   <div class="page-sub">Selecione os itens e escolha a quantidade</div>
 
-  <div class="itens-grid" id="grid"></div>
+  <div class="itens-grid">
+
+    <!-- ITEM 7 -->
+    <label class="item-card">
+      <input type="checkbox" value="item_7"
+             onchange="toggleItem('item_7','Item 7',3,this.checked,
+               this.closest('.item-card').querySelector('.qty-select').value);
+               toast(this.checked ? '✓ Item 7 adicionado' : 'Item 7 removido')"/>
+      <div class="item-inner">
+        <div class="chk-box">✓</div>
+        <img class="item-img" src="images/item7.jpg" alt="Item 7"
+             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Item+7'"/>
+        <span class="item-label">Item 7</span>
+        <span class="item-id">item_7</span>
+        <div class="qty-wrap">
+          <span class="qty-label">Qtd:</span>
+          <select class="qty-select"
+                  onchange="atualizarQty('item_7','Item 7',3,this.value)"
+                  onclick="event.stopPropagation()">
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+            <option>9</option><option>10</option>
+          </select>
+        </div>
+      </div>
+    </label>
+
+    <!-- ITEM 8 -->
+    <label class="item-card">
+      <input type="checkbox" value="item_8"
+             onchange="toggleItem('item_8','Item 8',3,this.checked,
+               this.closest('.item-card').querySelector('.qty-select').value);
+               toast(this.checked ? '✓ Item 8 adicionado' : 'Item 8 removido')"/>
+      <div class="item-inner">
+        <div class="chk-box">✓</div>
+        <img class="item-img" src="images/item8.jpg" alt="Item 8"
+             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Item+8'"/>
+        <span class="item-label">Item 8</span>
+        <span class="item-id">item_8</span>
+        <div class="qty-wrap">
+          <span class="qty-label">Qtd:</span>
+          <select class="qty-select"
+                  onchange="atualizarQty('item_8','Item 8',3,this.value)"
+                  onclick="event.stopPropagation()">
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+            <option>9</option><option>10</option>
+          </select>
+        </div>
+      </div>
+    </label>
+
+    <!-- ITEM 9 -->
+    <label class="item-card">
+      <input type="checkbox" value="item_9"
+             onchange="toggleItem('item_9','Item 9',3,this.checked,
+               this.closest('.item-card').querySelector('.qty-select').value);
+               toast(this.checked ? '✓ Item 9 adicionado' : 'Item 9 removido')"/>
+      <div class="item-inner">
+        <div class="chk-box">✓</div>
+        <img class="item-img" src="images/item9.jpg" alt="Item 9"
+             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Item+9'"/>
+        <span class="item-label">Item 9</span>
+        <span class="item-id">item_9</span>
+        <div class="qty-wrap">
+          <span class="qty-label">Qtd:</span>
+          <select class="qty-select"
+                  onchange="atualizarQty('item_9','Item 9',3,this.value)"
+                  onclick="event.stopPropagation()">
+            <option>1</option><option>2</option><option>3</option><option>4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option>
+            <option>9</option><option>10</option>
+          </select>
+        </div>
+      </div>
+    </label>
+
+  </div>
 
   <div class="nav-footer">
     <a class="btn btn-secondary" href="pagina2.html">‹ Página anterior</a>
@@ -44,16 +117,5 @@
 
 <div id="toast"></div>
 <script src="shared.js"></script>
-<script>
-  const ITENS = [
-    { id: 'item_13', label: 'Item 13', img: 'images/item13.jpg' },
-    { id: 'item_14', label: 'Item 14', img: 'images/item14.jpg' },
-    { id: 'item_15', label: 'Item 15', img: 'images/item15.jpg' },
-    { id: 'item_16', label: 'Item 16', img: 'images/item16.jpg' },
-    { id: 'item_17', label: 'Item 17', img: 'images/item17.jpg' },
-    { id: 'item_18', label: 'Item 18', img: 'images/item18.jpg' },
-  ];
-  renderItens('grid', ITENS, 3);
-</script>
 </body>
 </html>

@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Seleção — Página 2</title>
+<title>Seleção — Página 1</title>
 <link rel="stylesheet" href="shared.css"/>
 </head>
 <body>
 
+<!-- TOPBAR -->
 <div class="topbar">
   <span class="topbar-title">Seleção de itens</span>
   <a class="topbar-badge" href="resumo.html">
@@ -16,106 +17,117 @@
   </a>
 </div>
 
+<!-- NAVEGAÇÃO DE PÁGINAS -->
 <div class="page-nav">
-  <a class="page-nav-item" href="pagina1.html">① Página 1</a>
+  <a class="page-nav-item active" href="pagina1.html">① Página 1</a>
   <span class="page-nav-sep">›</span>
-  <a class="page-nav-item active" href="pagina2.html">② Página 2</a>
+  <a class="page-nav-item" href="pagina2.html">② Página 2</a>
   <span class="page-nav-sep">›</span>
   <a class="page-nav-item" href="pagina3.html">③ Página 3</a>
   <span class="page-nav-sep">›</span>
   <a class="page-nav-item" href="resumo.html">✓ Resumo</a>
 </div>
 
+<!-- CONTEÚDO -->
 <div class="content">
-  <div class="page-title">Página 2 — Itens 4 a 6</div>
+  <div class="page-title">Página 1 — Itens 1 a 3</div>
   <div class="page-sub">Selecione os itens e escolha a quantidade</div>
 
   <div class="itens-grid">
 
-    <!-- ITEM 4 -->
+    <!-- ITEM 1 -->
     <label class="item-card">
-      <input type="checkbox" value="item_4"
-             onchange="toggleItem('item_4','Marmitex 4',2,this.checked,
+      <input type="checkbox" value="item_1"
+             onchange="toggleItem('item_1','Marmitex 1',1,this.checked,
                this.closest('.item-card').querySelector('.qty-select').value);
-               toast(this.checked ? '✓ Marmitex 4 adicionado' : 'Marmitex 4 removido')"/>
+               toast(this.checked ? '✓ Marmitex 1 adicionado' : 'Marmitex 1 removido')"/>
       <div class="item-inner">
         <div class="chk-box">✓</div>
-        <img class="item-img" src="images/item4.jpg" alt="Marmitex 4"
-             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Marmitex+4'"/>
-        <span class="item-label">Marmitex 4</span>
-        <span class="item-id">item_4</span>
+        <img class="item-img" src="images/item1.jpg" alt="Marmitex 1"
+             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Marmitex+1'"/>
+        <span class="item-label">Marmitex 1</span>
+        <span class="item-id">item_1</span>
         <div class="qty-wrap">
           <span class="qty-label">Qtd:</span>
           <select class="qty-select"
-                  onchange="atualizarQty('item_4','Marmitex 4',2,this.value)"
+                  onchange="atualizarQty('item_1','Marmitex 1',1,this.value)"
                   onclick="event.stopPropagation()">
             <option>1</option><option>2</option><option>3</option><option>4</option>
             <option>5</option><option>6</option><option>7</option><option>8</option>
             <option>9</option><option>10</option>
           </select>
         </div>
-        <div class="complementos-wrap" data-item="item_4" data-label="Marmitex 4" data-pagina="2" onclick="event.stopPropagation()">
+        <div class="complementos-wrap" data-item="item_1" data-label="Marmitex 1" data-pagina="1" onclick="event.stopPropagation()">
           <span class="complementos-label">Complementos do dia</span>
           <div class="complementos-list">Carregando…</div>
         </div>
       </div>
     </label>
 
-    <!-- ITEM 5 -->
+    <!-- ITEM 2 -->
     <label class="item-card">
-      <input type="checkbox" value="item_5"
-             onchange="toggleItem('item_5','Item 5',2,this.checked,
+      <input type="checkbox" value="item_2"
+             onchange="toggleItem('item_2','Marmitex 2',1,this.checked,
                this.closest('.item-card').querySelector('.qty-select').value);
-               toast(this.checked ? '✓ Item 5 adicionado' : 'Item 5 removido')"/>
+               toast(this.checked ? '✓ Marmitex 2 adicionado' : 'Marmitex 2 removido')"/>
       <div class="item-inner">
         <div class="chk-box">✓</div>
-        <img class="item-img" src="images/item5.jpg" alt="Item 5"
-             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Item+5'"/>
-        <span class="item-label">Item 5</span>
-        <span class="item-id">item_5</span>
+        <img class="item-img" src="images/item2.jpg" alt="Marmitex 2"
+             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Marmitex+2'"/>
+        <span class="item-label">Marmitex 2</span>
+        <span class="item-id">item_2</span>
         <div class="qty-wrap">
           <span class="qty-label">Qtd:</span>
           <select class="qty-select"
-                  onchange="atualizarQty('item_5','Item 5',2,this.value)"
+                  onchange="atualizarQty('item_2','Marmitex 2',1,this.value)"
                   onclick="event.stopPropagation()">
             <option>1</option><option>2</option><option>3</option><option>4</option>
             <option>5</option><option>6</option><option>7</option><option>8</option>
             <option>9</option><option>10</option>
           </select>
         </div>
+        <div class="complementos-wrap" data-item="item_2" data-label="Marmitex 2" data-pagina="1" onclick="event.stopPropagation()">
+          <span class="complementos-label">Complementos do dia</span>
+          <div class="complementos-list">Carregando…</div>
+        </div>
       </div>
     </label>
 
-    <!-- ITEM 6 -->
+    <!-- ITEM 3 -->
     <label class="item-card">
-      <input type="checkbox" value="item_6"
-             onchange="toggleItem('item_6','Item 6',2,this.checked,
+      <input type="checkbox" value="item_3"
+             onchange="toggleItem('item_3','Marmitex 3',1,this.checked,
                this.closest('.item-card').querySelector('.qty-select').value);
-               toast(this.checked ? '✓ Item 6 adicionado' : 'Item 6 removido')"/>
+               toast(this.checked ? '✓ Marmitex 3 adicionado' : 'Marmitex 3 removido')"/>
       <div class="item-inner">
         <div class="chk-box">✓</div>
-        <img class="item-img" src="images/item6.jpg" alt="Item 6"
-             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Item+6'"/>
-        <span class="item-label">Item 6</span>
-        <span class="item-id">item_6</span>
+        <img class="item-img" src="images/item3.jpg" alt="Marmitex 3"
+             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=Marmitex+3'"/>
+        <span class="item-label">Marmitex 3</span>
+        <span class="item-id">item_3</span>
         <div class="qty-wrap">
           <span class="qty-label">Qtd:</span>
           <select class="qty-select"
-                  onchange="atualizarQty('item_6','Item 6',2,this.value)"
+                  onchange="atualizarQty('item_3','Marmitex 3',1,this.value)"
                   onclick="event.stopPropagation()">
             <option>1</option><option>2</option><option>3</option><option>4</option>
             <option>5</option><option>6</option><option>7</option><option>8</option>
             <option>9</option><option>10</option>
           </select>
+        </div>
+        <div class="complementos-wrap" data-item="item_3" data-label="Marmitex 3" data-pagina="1" onclick="event.stopPropagation()">
+          <span class="complementos-label">Complementos do dia</span>
+          <div class="complementos-list">Carregando…</div>
         </div>
       </div>
     </label>
 
   </div>
 
+  <!-- NAVEGAÇÃO -->
   <div class="nav-footer">
-    <a class="btn btn-secondary" href="pagina1.html">‹ Página anterior</a>
-    <a class="btn btn-primary"   href="pagina3.html">Próxima página ›</a>
+    <button class="btn btn-ghost" onclick="limparTudo()">🗑 Limpar tudo</button>
+    <a class="btn btn-primary" href="pagina2.html">Próxima página ›</a>
   </div>
 </div>
 
