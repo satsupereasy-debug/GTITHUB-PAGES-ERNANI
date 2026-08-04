@@ -1,62 +1,123 @@
 /**
- * shared.js — Template #3 Multi-página
- * Gerencia seleção de itens no localStorage entre páginas
+ * shared.js — Template #3 Dinâmico
+ * Busca produtos + complementos paginados da API e gerencia a seleção
+ * no localStorage (a seleção viaja entre a página de catálogo e o resumo).
  *
  * Estrutura salva no localStorage (chave: "selecao"):
  * {
- *   "item_1": { id: "item_1", label: "Item 1", pagina: 1, qty: 2 },
- *   "item_4": { id: "item_4", label: "Item 4", pagina: 2, qty: 1 },
+ *   "item_1": { id, label, pagina, qty, complementos: [...] },
  *   ...
  * }
  */
 
 const STORAGE_KEY = 'selecao';
 
-/* ── COMPLEMENTOS (marmitex) ──────────────────────────────────────────────
-   Lista muda todo dia — busca uma vez na API e reaproveita em todas as
-   páginas (cache em memória, dura só enquanto a aba estiver aberta). */
-const COMPLEMENTOS_API = 'https://api.nfcesupereasy.com.br/complementos/hoje';
+/* URL do backend no VPS — troca pro domínio real quando for publicar */
+const PRODUTOS_API = 'https://pedidos-food.nfcesupereasy.com.br/produtos';
 
-let _complementosCache = null;
-
-async function carregarComplementos() {
-  if (_complementosCache) return _complementosCache;
-  try {
-    const resp = await fetch(COMPLEMENTOS_API);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const dados = await resp.json();
-    _complementosCache = dados.itens || [];
-  } catch (e) {
-    console.error('Erro ao buscar complementos do dia:', e);
-    _complementosCache = [];
-  }
-  return _complementosCache;
+/* ── PAGINAÇÃO (via query string ?pagina=N na própria index.html) ── */
+function paginaAtual() {
+  const params = new URLSearchParams(location.search);
+  const p = parseInt(params.get('pagina') || '1');
+  return isNaN(p) || p < 1 ? 1 : p;
 }
 
-/* Monta os checkboxes de complementos dentro de um .complementos-wrap */
-async function montarComplementosUI(wrapEl) {
-  const itemId  = wrapEl.dataset.item;
-  const label   = wrapEl.dataset.label;
-  const pagina  = parseInt(wrapEl.dataset.pagina);
-  const lista   = wrapEl.querySelector('.complementos-list');
+function irPagina(delta) {
+  const nova = paginaAtual() + delta;
+  location.href = `index.html?pagina=${nova}`;
+}
 
-  const itens = await carregarComplementos();
-  if (!itens.length) {
-    lista.innerHTML = '<span class="complementos-vazio">Complementos indisponíveis no momento</span>';
-    return;
+/* ── BUSCAR E RENDERIZAR PRODUTOS DA PÁGINA ATUAL ── */
+async function carregarProdutos() {
+  const pagina = paginaAtual();
+  const grid = document.getElementById('itens-grid');
+  if (!grid) return; // esta página não tem grid de produtos (ex: resumo.html)
+
+  grid.innerHTML = '<div class="carregando">Carregando produtos…</div>';
+
+  try {
+    const resp = await fetch(`${PRODUTOS_API}?pagina=${pagina}`);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const dados = await resp.json();
+    renderizarProdutos(dados);
+  } catch (e) {
+    console.error('Erro ao carregar produtos:', e);
+    grid.innerHTML = '<div class="carregando">Não foi possível carregar os produtos. Tente novamente em instantes.</div>';
+  }
+}
+
+function renderizarProdutos(dados) {
+  const grid = document.getElementById('itens-grid');
+  const selecao = lerSelecao();
+
+  if (!dados.itens || !dados.itens.length) {
+    grid.innerHTML = '<div class="carregando">Nenhum produto encontrado nesta página.</div>';
+  } else {
+    grid.innerHTML = dados.itens.map(item => montarCardHtml(item, dados.pagina, selecao)).join('');
   }
 
-  const selecao = lerSelecao();
-  const atuais  = (selecao[itemId] && selecao[itemId].complementos) || [];
+  const titulo = document.getElementById('page-title');
+  if (titulo) titulo.textContent = `Página ${dados.pagina}`;
 
-  lista.innerHTML = itens.map(comp => `
-    <label class="complemento-chk">
-      <input type="checkbox" value="${comp}"
-             ${atuais.includes(comp) ? 'checked' : ''}
-             onchange="toggleComplemento('${itemId}','${label}',${pagina},this.value,this.checked)"/>
-      ${comp}
+  const btnAnterior = document.getElementById('btn-anterior');
+  const btnProxima  = document.getElementById('btn-proxima');
+  if (btnAnterior) btnAnterior.disabled = dados.pagina <= 1;
+  if (btnProxima)  btnProxima.disabled  = !dados.tem_proxima;
+
+  atualizarBadge();
+}
+
+function montarCardHtml(item, pagina, selecao) {
+  const marcado    = !!selecao[item.id];
+  const qtyAtual   = (selecao[item.id] && selecao[item.id].qty) || 1;
+  const compsAtuais = (selecao[item.id] && selecao[item.id].complementos) || [];
+  const temComplementos = item.complementos && item.complementos.length > 0;
+
+  const optionsQty = [1,2,3,4,5,6,7,8,9,10]
+    .map(n => `<option ${n === qtyAtual ? 'selected' : ''}>${n}</option>`)
+    .join('');
+
+  const complementosHtml = temComplementos ? `
+    <div class="complementos-wrap" onclick="event.stopPropagation()">
+      <span class="complementos-label">Complementos do dia</span>
+      <div class="complementos-list">
+        ${item.complementos.map(comp => `
+          <label class="complemento-chk">
+            <input type="checkbox" value="${comp}"
+                   ${compsAtuais.includes(comp) ? 'checked' : ''}
+                   onchange="toggleComplemento('${item.id}','${item.nome}',${pagina},this.value,this.checked)"/>
+            ${comp}
+          </label>
+        `).join('')}
+      </div>
+    </div>` : '';
+
+  const descricaoHtml = item.descricao
+    ? `<span class="item-desc">${item.descricao}</span>` : '';
+
+  return `
+    <label class="item-card">
+      <input type="checkbox" value="${item.id}" ${marcado ? 'checked' : ''}
+             onchange="toggleItem('${item.id}','${item.nome}',${pagina},this.checked,
+               this.closest('.item-card').querySelector('.qty-select').value);
+               toast(this.checked ? '✓ ${item.nome} adicionado' : '${item.nome} removido')"/>
+      <div class="item-inner">
+        <div class="chk-box">✓</div>
+        <img class="item-img" src="images/${item.imagem}" alt="${item.nome}"
+             onerror="this.src='https://placehold.co/300x225/f4f2ee/8a8680?text=${encodeURIComponent(item.nome)}'"/>
+        <span class="item-label">${item.nome}</span>
+        ${descricaoHtml}
+        <div class="qty-wrap">
+          <span class="qty-label">Qtd:</span>
+          <select class="qty-select" onclick="event.stopPropagation()"
+                  onchange="atualizarQty('${item.id}','${item.nome}',${pagina},this.value)">
+            ${optionsQty}
+          </select>
+        </div>
+        ${complementosHtml}
+      </div>
     </label>
-  `).join('');
+  `;
 }
 
 /* Marca/desmarca um complemento. Se o item ainda não estiver selecionado,
@@ -83,11 +144,6 @@ function toggleComplemento(itemId, label, pagina, complemento, checked) {
   salvarSelecao(selecao);
   atualizarBadge();
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.complementos-wrap').forEach(montarComplementosUI);
-});
-
 
 /* ── LER SELEÇÃO ── */
 function lerSelecao() {
@@ -120,9 +176,9 @@ function toggleItem(id, label, pagina, checked, qty) {
     selecao[id] = { id, label, pagina, qty: qty || 1, complementos: complementosExistentes };
   } else {
     delete selecao[id];
-    // desmarca os checkboxes de complemento na tela, se existirem nesta página
-    const wrap = document.querySelector(`.complementos-wrap[data-item="${id}"]`);
-    if (wrap) wrap.querySelectorAll('input[type="checkbox"]').forEach(c => c.checked = false);
+    // desmarca os checkboxes de complemento na tela, se existirem
+    const card = document.querySelector(`.item-card input[value="${id}"]`)?.closest('.item-card');
+    if (card) card.querySelectorAll('.complementos-wrap input[type="checkbox"]').forEach(c => c.checked = false);
   }
   salvarSelecao(selecao);
   atualizarBadge();
@@ -135,21 +191,6 @@ function atualizarQty(id, label, pagina, qty) {
     selecao[id].qty = parseInt(qty) || 1;
     salvarSelecao(selecao);
   }
-}
-
-/* ── RESTAURAR ESTADO DOS CHECKBOXES AO CARREGAR A PÁGINA ── */
-function restaurarEstado() {
-  const selecao = lerSelecao();
-  document.querySelectorAll('.item-card input[type="checkbox"]').forEach(chk => {
-    const id = chk.value;
-    if (selecao[id]) {
-      chk.checked = true;
-      // Restaura a quantidade no select
-      const qtySelect = chk.closest('.item-card')?.querySelector('.qty-select');
-      if (qtySelect) qtySelect.value = selecao[id].qty || 1;
-    }
-  });
-  atualizarBadge();
 }
 
 /* ── TOAST ── */
@@ -168,5 +209,7 @@ function limparTudo() {
   location.reload();
 }
 
-/* Restaura ao carregar */
-document.addEventListener('DOMContentLoaded', restaurarEstado);
+document.addEventListener('DOMContentLoaded', () => {
+  carregarProdutos();
+  atualizarBadge();
+});
